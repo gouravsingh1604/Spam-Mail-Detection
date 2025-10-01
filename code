@@ -1,0 +1,65 @@
+# Importing the Dependencies
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load the dataset
+raw_mail_data = pd.read_csv(r"/Users/Gourav Singh/Documents/spam mail detection/mail_data copy.csvham")
+print("Raw Mail Data:\n", raw_mail_data)
+
+# Data cleaning
+mail_data = raw_mail_data.where(pd.notnull(raw_mail_data), '')
+print("Cleaned Mail Data:\n", mail_data)
+
+# Verify data cleaning
+print(mail_data.head())
+print("Shape of Mail Data:", mail_data.shape)
+
+# Encode labels: spam as 0, ham as 1
+mail_data.loc[mail_data['Category'] == 'spam', 'Category'] = 0
+mail_data.loc[mail_data['Category'] == 'ham', 'Category'] = 1
+print("Encoded Mail Data:\n", mail_data)
+
+# Features and labels
+x = mail_data['Message']
+y = mail_data['Category']
+print("Features (x):\n", x)
+print("Labels (y):\n", y)
+
+# Train-test split
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=3)
+print("Shape of x:", x.shape)
+print("Shape of x_train:", x_train.shape)
+print("Shape of x_test:", x_test.shape)
+
+# Feature extraction using TF-IDF Vectorizer
+feature_extraction = TfidfVectorizer(min_df=1, stop_words='english', lowercase=True)
+x_train_features = feature_extraction.fit_transform(x_train)
+x_test_features = feature_extraction.transform(x_test)
+print("x_train:\n", x_train)
+print("x_train_features:\n", x_train_features)
+
+# Convert labels to integers
+y_train = y_train.astype('int')
+y_test = y_test.astype('int')
+print("y_train:\n", y_train)
+print("y_test:\n", y_test)
+
+# Logistic Regression model
+model = LogisticRegression()
+model.fit(x_train_features, y_train)
+
+# Prediction on training data
+prediction_on_train_data = model.predict(x_train_features)
+accuracy_on_train_data = accuracy_score(prediction_on_train_data, y_train)
+print("Accuracy on training data:", accuracy_on_train_data)
+
+# Prediction on test data
+prediction_on_test_data = model.predict(x_test_features)
+accuracy_on_test_data = accuracy_score(prediction_on_test_data, y_test)
+print("Accuracy on test data:", accuracy_on_test_data)
+
+# Detailed classification report
+print("\nClassification Report on Test Data:\n", classification_report(y_test, prediction_on_test_data))
